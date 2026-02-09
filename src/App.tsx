@@ -1,5 +1,6 @@
 import { useState, type ReactNode, type TouchEvent } from 'react'
 import styled, { createGlobalStyle, keyframes } from 'styled-components'
+import { Analytics } from '@vercel/analytics/react'
 
 const heroBg = new URL('./assets/MyBread/IMG_9000.png', import.meta.url).href
 
@@ -1389,6 +1390,7 @@ function App() {
           Поддержка
         </FloatingSupport>
       </Page>
+      <Analytics/>
     </>
   )
 }
