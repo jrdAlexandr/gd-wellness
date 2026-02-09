@@ -1,0 +1,6 @@
+/* Base resets are handled by styled-components GlobalStyle in App.tsx */
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
