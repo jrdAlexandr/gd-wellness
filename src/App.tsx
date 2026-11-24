@@ -196,6 +196,116 @@ const AccentCircle = styled.div`
   }
 `
 
+const promoShine = keyframes`
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  55%, 100% { transform: translateX(320%) skewX(-20deg); }
+`
+
+const PromoBar = styled.a`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 12px clamp(16px, 4vw, 48px);
+  background: linear-gradient(90deg, #0b0806 0%, #1f140d 50%, #0b0806 100%);
+  border-bottom: 1px solid rgba(247, 161, 67, 0.45);
+  color: #fff2e4;
+  text-decoration: none;
+  font-size: 0.95rem;
+  overflow: hidden;
+  isolation: isolate;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, rgba(255, 216, 168, 0.16), transparent);
+    animation: ${promoShine} 5s ease-in-out infinite;
+    z-index: -1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffbe74;
+    outline-offset: -4px;
+  }
+
+  @media (max-width: 640px) {
+    justify-content: flex-start;
+    padding-right: 150px;
+    font-size: 0.88rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      display: none;
+    }
+  }
+`
+
+const PromoTag = styled.span`
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #f7a143, #ffd8a8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+`
+
+const PromoAccent = styled.strong`
+  color: #ffbe74;
+  font-weight: 800;
+`
+
+const PromoLink = styled.span`
+  color: #ffd8a8;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 216, 168, 0.5);
+`
+
+const PromoCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(11, 8, 6, 0.85), rgba(31, 20, 13, 0.85));
+  border: 1px solid rgba(247, 161, 67, 0.55);
+  box-shadow: 0 0 28px rgba(247, 161, 67, 0.18);
+`
+
+const PromoDiscount = styled.span`
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f7a143, #ffbe74);
+  color: #120d0a;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+`
+
+const PromoCardText = styled.span`
+  display: grid;
+  gap: 2px;
+  color: #fff2e4;
+  font-size: 0.95rem;
+  line-height: 1.35;
+`
+
+const PromoNote = styled.p`
+  margin: 0;
+  flex-basis: 100%;
+  color: #c35d1c;
+  font-weight: 700;
+`
+
 const ReasonsSection = styled.section`
   padding: 0 clamp(24px, 6vw, 96px) clamp(32px, 7vw, 120px);
   display: grid;
@@ -902,7 +1012,11 @@ const Icon = styled.span`
 `
 
 function App() {
-  const joinLink = 'https://t.me/tribute/app?startapp=stBU_pc_TQ60IN'
+  // Black Friday: скидка 30% до конца 30 ноября 2026 (МСК), после — обычная ссылка
+  const promoActive = Date.now() < new Date('2026-12-01T00:00:00+03:00').getTime()
+  const joinLink = promoActive
+    ? 'https://t.me/tribute/app?startapp=stBU_pc_BLACK2026'
+    : 'https://t.me/tribute/app?startapp=stBU_pc_TQ60IN'
   const fitItems = [
     'Вы хотите научиться печь на закваске с нуля и без стресса.',
     'У вас уже был опыт, но «то не растёт, то мякиш не тот» — хочется понять логику.',
@@ -1086,6 +1200,15 @@ function App() {
   return (
     <>
       <GlobalStyle />
+      {promoActive && (
+        <PromoBar href={joinLink} target="_blank" rel="noreferrer">
+          <PromoTag>Black Friday</PromoTag>
+          <span>
+            <PromoAccent>−30%</PromoAccent> на подписку до 30 ноября
+          </span>
+          <PromoLink>Забрать скидку →</PromoLink>
+        </PromoBar>
+      )}
       <Page>
         <Hero>
           <HeroImage />
@@ -1103,9 +1226,18 @@ function App() {
               <Bullet>Можно начать без специального инвентаря</Bullet>
               <Bullet>Новые рецепты добавляются каждый месяц</Bullet>
             </Bullets>
+            {promoActive && (
+              <PromoCard>
+                <PromoDiscount>−30%</PromoDiscount>
+                <PromoCardText>
+                  <PromoTag>Black Friday</PromoTag>
+                  <span>Скидка на подписку действует до 30 ноября включительно</span>
+                </PromoCardText>
+              </PromoCard>
+            )}
             <Actions>
               <PrimaryButton as="a" href={joinLink} target="_blank" rel="noreferrer">
-                Присоединиться к сообществу
+                {promoActive ? 'Присоединиться со скидкой 30%' : 'Присоединиться к сообществу'}
               </PrimaryButton>
             </Actions>
           </HeroContent>
@@ -1228,8 +1360,9 @@ function App() {
             </WhatList>
             <CTAStack>
               <PrimaryButton as="a" href={joinLink} target="_blank" rel="noreferrer">
-                Оформить подписку
+                {promoActive ? 'Оформить подписку −30%' : 'Оформить подписку'}
               </PrimaryButton>
+              {promoActive && <PromoNote>Black Friday: скидка 30% до 30 ноября включительно</PromoNote>}
               <DirectionsLead>Подписка открывает доступ ко всем направлениям сразу.</DirectionsLead>
             </CTAStack>
           </WhatSection>
