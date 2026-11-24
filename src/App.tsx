@@ -1,12 +1,13 @@
-import { useState, type ReactNode, type TouchEvent } from 'react'
+import { useEffect, useState, type ReactNode, type TouchEvent } from 'react'
 import styled, { createGlobalStyle, keyframes } from 'styled-components'
 import { Analytics } from '@vercel/analytics/react'
 
-const heroBg = new URL('./assets/MyBread/IMG_9000.png', import.meta.url).href
+const heroBg = '/hero.jpg'
+
+// Black Friday: скидка 30% до конца 30 ноября 2026 (МСК), после — обычная ссылка
+const promoActive = Date.now() < new Date('2026-12-01T00:00:00+03:00').getTime()
 
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap');
-
   :root {
     color: #0f0d0b;
     background-color: #f9f6f2;
@@ -1012,8 +1013,6 @@ const Icon = styled.span`
 `
 
 function App() {
-  // Black Friday: скидка 30% до конца 30 ноября 2026 (МСК), после — обычная ссылка
-  const promoActive = Date.now() < new Date('2026-12-01T00:00:00+03:00').getTime()
   const joinLink = promoActive
     ? 'https://t.me/tribute/app?startapp=stBU_pc_BLACK2026'
     : 'https://t.me/tribute/app?startapp=stBU_pc_TQ60IN'
@@ -1059,6 +1058,9 @@ function App() {
   const galleryImages = galleryImageFiles.map(
     (file) => new URL(`./assets/MyBread/optimized/${file}`, import.meta.url).href
   )
+  const galleryThumbs = galleryImageFiles.map(
+    (file) => new URL(`./assets/MyBread/thumbs/${file.replace(/\.\w+$/, '.jpg')}`, import.meta.url).href
+  )
   const reviewImageFiles = [
     'IMG_1956.jpg',
     'IMG_1958.jpg',
@@ -1081,6 +1083,9 @@ function App() {
   ]
   const reviewImages = reviewImageFiles.map(
     (file) => new URL(`./assets/Reviews/optimized/${file}`, import.meta.url).href
+  )
+  const reviewThumbs = reviewImageFiles.map(
+    (file) => new URL(`./assets/Reviews/thumbs/${file}`, import.meta.url).href
   )
 
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -1186,6 +1191,29 @@ function App() {
   const closeReview = () => setReviewOpen(false)
   const prevReview = () => setReviewIndex((prev) => (prev - 1 + reviewImages.length) % reviewImages.length)
   const nextReview = () => setReviewIndex((prev) => (prev + 1) % reviewImages.length)
+  const modalOpen = galleryOpen || reviewOpen
+  useEffect(() => {
+    if (!modalOpen) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      const total = galleryOpen ? galleryImages.length : reviewImages.length
+      const setIndex = galleryOpen ? setGalleryIndex : setReviewIndex
+      if (e.key === 'Escape') {
+        setGalleryOpen(false)
+        setReviewOpen(false)
+      } else if (e.key === 'ArrowRight') {
+        setIndex((prev) => (prev + 1) % total)
+      } else if (e.key === 'ArrowLeft') {
+        setIndex((prev) => (prev - 1 + total) % total)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [modalOpen, galleryOpen, galleryImages.length, reviewImages.length])
   const handleReviewTouchStart = (e: TouchEvent) => setReviewTouchStart(e.touches[0].clientX)
   const handleReviewTouchEnd = (e: TouchEvent) => {
     if (reviewTouchStart === null) return
@@ -1373,7 +1401,7 @@ function App() {
             <GalleryTitle>Моя выпечка и чему я обучаю</GalleryTitle>
           </GalleryHeader>
           <GalleryGrid>
-            {galleryImages.map((src, idx) => (
+            {galleryThumbs.map((src, idx) => (
               <GalleryCard key={src} onClick={() => openGallery(idx)} aria-label="Открыть фото хлеба">
                 <GalleryImage
                   src={src}
@@ -1391,7 +1419,7 @@ function App() {
             <TestimonialsTitle>Что говорят внутри сообщества</TestimonialsTitle>
           </TestimonialsHeader>
           <GalleryGrid>
-            {reviewImages.map((src, idx) => (
+            {reviewThumbs.map((src, idx) => (
               <GalleryCard key={src} onClick={() => openReview(idx)} aria-label="Открыть отзыв">
                 <GalleryImage src={src} alt="Скриншот отзыва" loading="lazy" decoding="async" />
               </GalleryCard>
@@ -1400,8 +1428,8 @@ function App() {
         </TestimonialsSection>
         <FAQSection>
           <FAQHeader>
-            <SectionEyebrow></SectionEyebrow>
-            <FAQTitle>Часто задаваемые вопросы:</FAQTitle>
+            <SectionEyebrow>Вопросы и ответы</SectionEyebrow>
+            <FAQTitle>Часто задаваемые вопросы</FAQTitle>
           </FAQHeader>
           <FAQList>
             {faqs.map((item, index) => {
@@ -1464,9 +1492,10 @@ function App() {
           onTouchEnd={handleTouchEnd}
         >
           <ModalContent
+            role="dialog"
+            aria-modal="true"
+            aria-label="Фото хлеба"
             onClick={(e) => e.stopPropagation()}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
           >
             <ModalImage src={galleryImages[galleryIndex]} alt="Фото хлеба крупно" loading="lazy" />
             <ModalNav>
@@ -1489,9 +1518,10 @@ function App() {
           onTouchEnd={handleReviewTouchEnd}
         >
           <ModalContent
+            role="dialog"
+            aria-modal="true"
+            aria-label="Отзыв"
             onClick={(e) => e.stopPropagation()}
-            onTouchStart={handleReviewTouchStart}
-            onTouchEnd={handleReviewTouchEnd}
           >
             <ModalImage src={reviewImages[reviewIndex]} alt="Отзыв крупно" loading="lazy" />
             <ModalNav>
@@ -1511,7 +1541,7 @@ function App() {
           href="https://t.me/menedjerks"
           target="_blank"
           rel="noreferrer"
-          $hidden={galleryOpen || reviewOpen}
+          $hidden={modalOpen}
         >
           <Icon>
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="2">
